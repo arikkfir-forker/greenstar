@@ -60,7 +60,7 @@ jobs:
           for c in "${CURRENCIES[@]}"; do
             curl -sSL "https://api.polygon.io/v2/aggs/ticker/C:${c}USD/range/1/day/${THIS_YEAR_START_DATE}/${THIS_YEAR_END_DATE}?apiKey=${POLYGON_KEY}" \
               | jq -r ".results[] | [ (.t / 1000 | strftime(\"%Y-%m-%d\")), \"${c}\", \"USD\", .c, \"false\" ]|@csv" >> "./deploy/local/rates/exchange-rates.csv"
-            sleep 6
+            sleep 12
           done
           
           LAST_YEAR="$(date -d "1 years ago" +"%Y")"
@@ -68,7 +68,7 @@ jobs:
             for c in "${CURRENCIES[@]}"; do
               curl -sSL "https://api.polygon.io/v2/aggs/ticker/C:${c}USD/range/1/day/${year}-01-01/${year}-12-31?apiKey=${POLYGON_KEY}" \
                 | jq -r ".results[] | [ (.t / 1000 | strftime(\"%Y-%m-%d\")), \"${c}\", \"USD\", .c, \"false\" ]|@csv" >> "./deploy/local/rates/exchange-rates.csv"
-              sleep 6
+              sleep 12
             done
           done
 
