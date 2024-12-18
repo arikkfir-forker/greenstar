@@ -50,7 +50,7 @@ jobs:
       - name: Download currencies CSV
         run: |
           curl -G https://api.currencyapi.com/v3/currencies -H "apikey: ${CURRENCY_API_KEY}" \
-            | jq -r '.data | [ .code, .symbol, .symbol_native, .name, .decimal_digits, .rounding, .name_plural, .type, "{" + (.countries | join(",")) + "}" ] | @csv' > ./deploy/local/rates/currencies.csv
+            | jq -r '.data[] | [ .code, .symbol, .symbol_native, .name, .decimal_digits, .rounding, .name_plural, .type, "{" + (.countries | join(",")) + "}" ] | @csv' > ./deploy/local/rates/currencies.csv
 
       - name: Download exchange rates
         run: |
