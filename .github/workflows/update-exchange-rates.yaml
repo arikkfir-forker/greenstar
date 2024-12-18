@@ -52,7 +52,7 @@ jobs:
 
       - name: Download exchange rates
         run: |
-          rm -fv "${RATES_FILE}"
+          rm -fv "./deploy/local/rates/exchange-rates.csv"
           CURRENCIES=("AED" "AUD" "BRL" "EUR" "GBP" "ILS" "INR" "JPY" "KRW" "LBP" "MAD" "MVR" "MXN" "NOK" "NZD" "PLN" "RON" "SAR" "SCR" "SEK" "THB" "TRY" "UAH" "ZAR")
           
           THIS_YEAR_START_DATE="$(date +"%Y")-01-01"
