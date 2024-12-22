@@ -80,9 +80,9 @@ jobs:
     strategy:
       matrix:
         images:
-          - { dir: backend, file: backend/Dockerfile.backend, name: backend, imageName: backend, target: production }
-          - { dir: backend, file: backend/Dockerfile.exchangeRatesJob, name: exchangeRatesJob, imageName: exchange-rates-job, target: production }
-          - { dir: backend, file: backend/Dockerfile.initJob, name: initJob, imageName: init-job, target: production }
+          - { dir: backend-migrate, file: backend/Dockerfile.migrate, name: backend-migrate, imageName: backend-migrate, target: production }
+          - { dir: backend-acme, file: backend/Dockerfile.acme, name: backend-acme, imageName: backend-acme, target: production }
+          - { dir: backend-server, file: backend/Dockerfile.server, name: backend-server, imageName: backend-server, target: production }
           - { dir: frontend, file: frontend/Dockerfile.frontend, name: frontend, imageName: frontend, target: production }
       fail-fast: false
     permissions:
@@ -202,14 +202,6 @@ jobs:
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Fetch secrets
-        uses: 1password/load-secrets-action@v2
-        with:
-          export-env: true
-        env:
-          CURRENCY_API_KEY: "op://GreenSTAR/Currency API/credential"
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_GREENSTAR }}
 
       - name: Setup Environment
         env:

@@ -16,7 +16,7 @@ ALTER TABLE currencies
     OWNER TO greenstar_backend;
 
 COPY currencies (code, symbol, symbol_native, name, decimal_digits, rounding, name_plural, type, country_codes)
-    FROM '/var/greenstar/import/currencies.csv'
+    FROM '/var/greenstar/rates/currencies.csv'
     WITH CSV;
 
 create table rates
@@ -40,8 +40,12 @@ ALTER TABLE rates
     OWNER TO greenstar_backend;
 
 COPY rates (date, source_currency_code, target_currency_code, rate, mock)
-    FROM '/var/greenstar/import/exchange-rates.csv'
+    FROM '/var/greenstar/rates/exchange-rates.csv'
     WITH CSV;
+
+INSERT INTO rates (date, source_currency_code, target_currency_code, created_at, updated_at, rate, mock)
+SELECT date, target_currency_code, source_currency_code, created_at, updated_at, 1/rate, false
+FROM rates;
 
 create table tenants
 (

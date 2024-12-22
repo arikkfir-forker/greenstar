@@ -168,18 +168,9 @@ tasks:
       - frontend/src/hooks/update.*.ts
       - frontend/src/models/*.ts
 
-  generate-helm-values:
-    deps: [ toolchain:1password ]
-    cmds:
-      - mkdir -p hack && touch ./hack/greenstar-values.yaml
-      - yq -i ".currencyAPI.key = \"${CURRENCY_API_KEY}\"" ./hack/greenstar-values.yaml
-    status:
-      - test "$(yq ".currencyAPI.key" < ./hack/greenstar-values.yaml)" = "${CURRENCY_API_KEY}"
-
   deploy:
     deps: [ generate-rest, setup-cluster ]
     cmds:
-      - task: generate-helm-values
       - skaffold build -q > hack/skaffold-build.json
       - skaffold deploy --load-images --build-artifacts hack/skaffold-build.json
 
@@ -190,7 +181,6 @@ tasks:
   dev:
     deps: [ generate-rest, setup-cluster ]
     cmds:
-      - task: generate-helm-values
       - skaffold dev --tail=false --toot=true
 
   teardown:
@@ -199,9 +189,9 @@ tasks:
   package-helm-chart:
     deps: [ toolchain:helm ]
     cmds:
-      - yq -i ".initJob.image.tag = \"${IMAGES_TAG}\"" deploy/chart/values.yaml
-      - yq -i ".exchangeRatesCronJob.image.tag = \"${IMAGES_TAG}"\" deploy/chart/values.yaml
-      - yq -i ".backend.image.tag = \"${IMAGES_TAG}"\" deploy/chart/values.yaml
+      - yq -i ".backend.acme.image.tag = \"${IMAGES_TAG}"\" deploy/chart/values.yaml
+      - yq -i ".backend.migrate.image.tag = \"${IMAGES_TAG}"\" deploy/chart/values.yaml
+      - yq -i ".backend.server.image.tag = \"${IMAGES_TAG}"\" deploy/chart/values.yaml
       - yq -i ".frontend.image.tag = \"${IMAGES_TAG}"\" deploy/chart/values.yaml
       - helm package ./deploy/chart --app-version "${VERSION}" --version "${VERSION}"
     preconditions:
@@ -240,20 +230,20 @@ tasks:
       - test "$(telepresence status --output yaml|yq '.user_daemon.running')" = "true"
       - test "$(telepresence status --output yaml|yq '.user_daemon.status')" = "Connected"
 
-  telepresence-intercept-backend:
+  telepresence-intercept-backend-server:
     deps: [ telepresence-connect ]
     cmds:
       # TODO: re-enable mounting once sshfs is set up
-      - telepresence intercept "${HELM_RELEASE_NAME}-backend" --env-file backend/telepresence.env --mount false --port 8080:80
+      - telepresence intercept "${HELM_RELEASE_NAME}-backend-server" --env-file backend/telepresence.env --mount false --port 8080:80
     status:
-      - telepresence status --output=yaml | yq -e ".user_daemon.intercepts[] | select(.name == \"${HELM_RELEASE_NAME}-backend\") | [.name] | length == 1"
+      - telepresence status --output=yaml | yq -e ".user_daemon.intercepts[] | select(.name == \"${HELM_RELEASE_NAME}-backend-server\") | [.name] | length == 1"
 
-  telepresence-leave-backend:
+  telepresence-leave-backend-server:
     deps: [ telepresence-connect ]
     cmds:
-      - telepresence leave "${HELM_RELEASE_NAME}-backend"
+      - telepresence leave "${HELM_RELEASE_NAME}-backend-server"
     status:
-      - telepresence status --output=yaml | yq -e ".user_daemon.intercepts[] | select(.name == \"${HELM_RELEASE_NAME}-backend\") | [.name] | length == 0"
+      - telepresence status --output=yaml | yq -e ".user_daemon.intercepts[] | select(.name == \"${HELM_RELEASE_NAME}-backend-server\") | [.name] | length == 0"
 
   telepresence-intercept-frontend:
     deps: [ telepresence-connect ]

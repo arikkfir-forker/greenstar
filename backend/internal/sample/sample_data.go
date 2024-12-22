@@ -5,12 +5,12 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
-	"github.com/arikkfir/greenstar/backend/internal/server/middleware"
 	"github.com/arikkfir/greenstar/backend/internal/server/resources/account"
 	"github.com/arikkfir/greenstar/backend/internal/server/resources/tenant"
 	"github.com/arikkfir/greenstar/backend/internal/server/resources/transaction"
 	"github.com/arikkfir/greenstar/backend/internal/server/util"
 	"github.com/arikkfir/greenstar/backend/internal/util/db"
+	tenantutil "github.com/arikkfir/greenstar/backend/internal/util/tenant"
 	pgxorig "github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"gopkg.in/yaml.v3"
@@ -38,7 +38,7 @@ type generator struct {
 
 func Generate(ctx context.Context, pool *pgxpool.Pool, th tenant.Handler, tenantID, tenantDisplayName string, txh transaction.Handler, ah account.Handler) error {
 	slog.InfoContext(ctx, "Generating sample data")
-	ctx = middleware.WithTenantID(ctx, tenantID)
+	ctx = tenantutil.WithTenantID(ctx, tenantID)
 
 	// Start a transaction & expose it in a context, simulating the way it's done in real HTTP requests
 	txOptions := pgxorig.TxOptions{
@@ -51,7 +51,7 @@ func Generate(ctx context.Context, pool *pgxpool.Pool, th tenant.Handler, tenant
 		return fmt.Errorf("failed starting a database transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
-	ctx = db.NewContextWithTx(ctx, tx)
+	ctx = db.WithTransaction(ctx, tx)
 
 	accountIDs := make(map[string]string)
 

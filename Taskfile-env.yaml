@@ -30,7 +30,6 @@ tasks:
         DOMAIN=greenstar.test
         
         # Secrets
-        CURRENCY_API_KEY=${CURRENCY_API_KEY:-$(op read "op://GreenSTAR/Currency API/credential")}
         LOCATION_IQ_ACCESS_TOKEN=${LOCATION_IQ_ACCESS_TOKEN:-$(op read "op://GreenSTAR/Location IQ/credential")}
         
         # Third-party versions
