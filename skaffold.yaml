@@ -48,7 +48,7 @@ deploy:
         - host:
             command: [ touch, ./hack/greenstar-values.yaml ]
     releases:
-      - name: '{{default (list "greenstar" (cmd "whoami") | join "-") .HELM_RELEASE_NAME}}'
+      - name: greenstar
         chartPath: ./deploy/chart
         packaged:
           appVersion: 0.0.0-{{cmd "bash" "-c" "git rev-parse HEAD" | substr 0 7}}

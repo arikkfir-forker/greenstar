@@ -1,6 +1,10 @@
 version: 3
 output: prefixed
 
+env:
+  CLUSTER_NAME: greenstar
+  DOMAIN: greenstar.test
+
 dotenv:
   - .env
 
@@ -18,19 +22,6 @@ set:
 silent: true
 
 tasks:
-
-  env:
-    cmds:
-      - |
-        cat > .env <<EOF
-        CLUSTER_NAME=greenstar
-        HELM_RELEASE_NAME=greenstar
-        DOMAIN=greenstar.test
-        EOF
-    status:
-      - grep "CLUSTER_NAME=greenstar" .env
-      - grep "HELM_RELEASE_NAME=greenstar" .env
-      - grep "DOMAIN=greenstar.test" .env
 
   setup-domain-dns: { deps: [ toolchain:setup-domain-dns ] }
 
@@ -247,28 +238,28 @@ tasks:
     deps: [ telepresence-connect ]
     cmds:
       # TODO: re-enable mounting once sshfs is set up
-      - telepresence intercept "${HELM_RELEASE_NAME}-backend-server" --env-file backend/telepresence.env --mount false --port 8080:80
+      - telepresence intercept "greenstar-backend-server" --env-file backend/telepresence.env --mount false --port 8080:80
     status:
-      - telepresence status --output=yaml | yq -e ".user_daemon.intercepts[] | select(.name == \"${HELM_RELEASE_NAME}-backend-server\") | [.name] | length == 1"
+      - telepresence status --output=yaml | yq -e ".user_daemon.intercepts[] | select(.name == \"greenstar-backend-server\") | [.name] | length == 1"
 
   telepresence-leave-backend-server:
     deps: [ telepresence-connect ]
     cmds:
-      - telepresence leave "${HELM_RELEASE_NAME}-backend-server"
+      - telepresence leave "greenstar-backend-server"
     status:
-      - telepresence status --output=yaml | yq -e ".user_daemon.intercepts[] | select(.name == \"${HELM_RELEASE_NAME}-backend-server\") | [.name] | length == 0"
+      - telepresence status --output=yaml | yq -e ".user_daemon.intercepts[] | select(.name == \"greenstar-backend-server\") | [.name] | length == 0"
 
   telepresence-intercept-frontend:
     deps: [ telepresence-connect ]
     cmds:
       # TODO: re-enable mounting once sshfs is set up
-      - telepresence intercept "${HELM_RELEASE_NAME}-frontend" --env-file frontend/telepresence.env --mount false --port 3000:80
+      - telepresence intercept "greenstar-frontend" --env-file frontend/telepresence.env --mount false --port 3000:80
     status:
-      - telepresence status --output=yaml | yq -e ".user_daemon.intercepts[] | select(.name == \"${HELM_RELEASE_NAME}-frontend\") | [.name] | length == 1"
+      - telepresence status --output=yaml | yq -e ".user_daemon.intercepts[] | select(.name == \"greenstar-frontend\") | [.name] | length == 1"
 
   telepresence-leave-frontend:
     deps: [ telepresence-connect ]
     cmds:
-      - telepresence leave "${HELM_RELEASE_NAME}-frontend"
+      - telepresence leave "greenstar-frontend"
     status:
-      - telepresence status --output=yaml | yq -e ".user_daemon.intercepts[] | select(.name == \"${HELM_RELEASE_NAME}-frontend\") | [.name] | length == 0"
+      - telepresence status --output=yaml | yq -e ".user_daemon.intercepts[] | select(.name == \"greenstar-frontend\") | [.name] | length == 0"

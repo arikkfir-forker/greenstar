@@ -179,6 +179,8 @@ jobs:
     name: End-to-End Tests
     runs-on: ubuntu-22.04
     needs: [ build-helm-package ]
+    env:
+      CLUSTER_NAME: greenstar-ci-${{ github.run_id }}-${{ github.run_attempt }}
     permissions:
       contents: write
       id-token: write
@@ -200,14 +202,6 @@ jobs:
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup Environment
-        env:
-          CLUSTER_NAME: greenstar-ci-${{ github.run_id }}-${{ github.run_attempt }}
-          HELM_RELEASE_NAME: greenstar-ci-${{ github.run_id }}-${{ github.run_attempt }}
-        run: |
-          task -t Taskfile-env.yaml
-          while read LINE; do echo "${LINE}" >> $GITHUB_ENV; done < .env
 
       - name: Setup DNS
         run: task -v setup-domain-dns
@@ -243,7 +237,7 @@ jobs:
         env:
           HELM_PACKAGE_VERSION: ${{ needs.build-helm-package.outputs.version }}
         run: |
-          helm install "${HELM_RELEASE_NAME}" \
+          helm install greenstar \
             oci://ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ github.event.repository.name }} \
             --version "${HELM_PACKAGE_VERSION}" \
             --create-namespace --namespace="greenstar" \
