@@ -2,10 +2,9 @@
 // noinspection DuplicatedCode
 
 import { BaseAPIURL } from "../../services/util.ts"
-import { Hook, Method, useOperation } from "../../util/operation.ts"
+import { useOperation, Method, Hook } from "../../util/operation.ts"
 
 export interface Request {}
-
 export type Response = {} | undefined
 
 export function useDeleteAllAccounts(): Hook<Request, Response> {

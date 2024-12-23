@@ -2,8 +2,9 @@
 // noinspection DuplicatedCode
 
 import { BaseAPIURL } from "../../services/util.ts"
-import { Account, DateProperties } from "../../models/account.ts"
-import { Hook, Method, useOperation } from "../../util/operation.ts"
+import { Account } from "../../models/account.ts"
+import { DateProperties } from "../../models/account.ts"
+import { useOperation, Method, Hook } from "../../util/operation.ts"
 
 export interface Request {
     id: string
@@ -11,7 +12,6 @@ export interface Request {
     icon?: string
     parentID?: string
 }
-
 export type Response = Account | undefined
 
 export function useUpdateAccount(): Hook<Request, Response> {

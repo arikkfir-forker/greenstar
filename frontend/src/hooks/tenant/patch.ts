@@ -2,14 +2,14 @@
 // noinspection DuplicatedCode
 
 import { BaseAPIURL } from "../../services/util.ts"
-import { DateProperties, Tenant } from "../../models/tenant.ts"
-import { Hook, Method, useOperation } from "../../util/operation.ts"
+import { Tenant } from "../../models/tenant.ts"
+import { DateProperties } from "../../models/tenant.ts"
+import { useOperation, Method, Hook } from "../../util/operation.ts"
 
 export interface Request {
     id: string
     displayName?: string
 }
-
 export type Response = Tenant | undefined
 
 export function usePatchTenant(): Hook<Request, Response> {
