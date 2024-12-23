@@ -11,10 +11,17 @@ export interface Locale {
     countryCode: string
 }
 
-export const LocaleContext = createContext<Locale | undefined>(undefined)
+const dummyLocale = {
+    language:    navigator.language,
+    currency:    "USD",
+    country:     "United States",
+    countryCode: "US",
+}
+
+export const LocaleContext = createContext<Locale>(dummyLocale)
 
 export function LocaleProvider({children}: { children: any }) {
-    const [locale, setLocale] = useState<Locale | undefined>()
+    const [locale, setLocale] = useState<Locale>(dummyLocale)
 
     useEffect(() => {
         try {
@@ -26,7 +33,6 @@ export function LocaleProvider({children}: { children: any }) {
                 if (!parsedLocation.location && !parsedLocation.error && !parsedLocation.resolved) {
                     setLocale(parsedLocation)
                 }
-                return
             }
         } catch (error) {
             console.error("Failed to load location from local storage:", error)
@@ -34,12 +40,6 @@ export function LocaleProvider({children}: { children: any }) {
 
         if (!apiKey) {
             console.warn("No GeoAPIfy API key provided. Using dummy locale.")
-            setLocale({
-                          language:    navigator.language,
-                          currency:    "USD",
-                          country:     "United States",
-                          countryCode: "US",
-                      })
             return
         }
 
