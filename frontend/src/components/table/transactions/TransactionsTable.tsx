@@ -5,7 +5,7 @@ import { useCurrencyFormatter, useDateFormatter } from "../../../hooks/locale.ts
 import { useCallback, useContext, useEffect, useMemo, useState } from "react"
 import { CustomDataGrid } from "../CustomDataGrid.tsx"
 import type { GridAutosizeOptions } from "@mui/x-data-grid/hooks/features/columnResize"
-import { AccountID, AccountsMap } from "../../../models/account-addons.ts"
+import { AccountID, AccountsMap } from "../../../util/account-addons.ts"
 import { useListTransactions } from "../../../hooks/transaction/list.ts"
 
 const defaultColumnVisibilityModel = {

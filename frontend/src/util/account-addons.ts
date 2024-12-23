@@ -1,4 +1,4 @@
-import { Account } from "./account.ts"
+import { Account } from "../models/account.ts"
 
 export type AccountID = Account["id"]
 

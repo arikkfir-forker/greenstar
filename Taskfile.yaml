@@ -134,15 +134,15 @@ tasks:
     cmds:
       - go fmt ./...
     status:
-      - ./node_modules/.bin/prettier --check .
+      - test -z "$(gofmt -d .)"
 
   format-frontend-code:
     deps: [ download-frontend-dependencies ]
     dir: frontend
     cmds:
-      - ./node_modules/.bin/prettier --write . | grep -v unchanged
+      - ./node_modules/.bin/prettier --write ./src/hooks/*/*.ts ./src/models/*.ts | grep -v unchanged
     status:
-      - ./node_modules/.bin/prettier --list-different .
+      - ./node_modules/.bin/prettier --list-different ./src/hooks/*/*.ts ./src/models/*.ts
 
   format-code:
     deps: [ format-backend-code, format-frontend-code ]

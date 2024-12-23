@@ -9,7 +9,7 @@ import {
     BuildAccountsTree,
     FindAccountInTree,
     MapAccountsByID,
-} from "../models/account-addons.ts"
+} from "../util/account-addons.ts"
 import { useListAccounts } from "../hooks/account/list.ts"
 
 export function TransactionsPage() {

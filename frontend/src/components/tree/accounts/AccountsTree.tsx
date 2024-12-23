@@ -16,7 +16,7 @@ import {
 import { useCurrencyFormatter } from "../../../hooks/locale.ts"
 import { DynamicIcon } from "../../DynamicIcon.tsx"
 import { Box } from "@mui/material"
-import { AccountNode } from "../../../models/account-addons.ts"
+import { AccountNode } from "../../../util/account-addons.ts"
 
 export interface AccountTreeItemProps
     extends Omit<UseTreeItem2Parameters, "rootRef">,
