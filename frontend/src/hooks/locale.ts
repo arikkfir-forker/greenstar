@@ -6,7 +6,11 @@ export function useCurrencyFormatter() {
     const currencyFormat = useMemo(() => {
         const language = locale.language
         const currency = locale.currency
-        return new Intl.NumberFormat(language, { style: "currency", currency: currency, maximumFractionDigits: 0 })
+        return new Intl.NumberFormat(language, {
+            style: "currency",
+            currency: currency,
+            maximumFractionDigits: 0,
+        })
     }, [locale, navigator.language])
     return useCallback((v: number) => currencyFormat.format(v), [currencyFormat])
 }

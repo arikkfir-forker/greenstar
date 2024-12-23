@@ -140,9 +140,9 @@ tasks:
     deps: [ download-frontend-dependencies ]
     dir: frontend
     cmds:
-      - ./node_modules/.bin/prettier --write ./src/hooks/*/*.ts ./src/models/*.ts | grep -v unchanged
+      - ./node_modules/.bin/prettier --list-different --write .
     status:
-      - ./node_modules/.bin/prettier --list-different ./src/hooks/*/*.ts ./src/models/*.ts
+      - ./node_modules/.bin/prettier --list-different .
 
   format-code:
     deps: [ format-backend-code, format-frontend-code ]

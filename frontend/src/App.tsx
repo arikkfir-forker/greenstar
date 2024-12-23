@@ -38,7 +38,12 @@ export function RootLayout() {
                 gap: 0,
             }}
         >
-            <TopBar sx={{ flexGrow: 0, flexShrink: 0 }} />
+            <TopBar
+                sx={{
+                    flexGrow: 0,
+                    flexShrink: 0,
+                }}
+            />
             <Box
                 component="main"
                 sx={{
@@ -54,7 +59,12 @@ export function RootLayout() {
             >
                 <Outlet />
             </Box>
-            <Footer sx={{ flxGrow: 0, flexShrink: 0 }} />
+            <Footer
+                sx={{
+                    flxGrow: 0,
+                    flexShrink: 0,
+                }}
+            />
         </Box>
     )
 }

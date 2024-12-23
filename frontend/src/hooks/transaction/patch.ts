@@ -2,9 +2,8 @@
 // noinspection DuplicatedCode
 
 import { BaseAPIURL } from "../../services/util.ts"
-import { Transaction } from "../../models/transaction.ts"
-import { DateProperties } from "../../models/transaction.ts"
-import { useOperation, Method, Hook } from "../../util/operation.ts"
+import { DateProperties, Transaction } from "../../models/transaction.ts"
+import { Hook, Method, useOperation } from "../../util/operation.ts"
 
 export interface Request {
     id: string
@@ -16,6 +15,7 @@ export interface Request {
     sourceAccountId?: string
     targetAccountId?: string
 }
+
 export type Response = Transaction | undefined
 
 export function usePatchTransaction(): Hook<Request, Response> {
