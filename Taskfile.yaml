@@ -19,6 +19,19 @@ silent: true
 
 tasks:
 
+  env:
+    cmds:
+      - |
+        cat > .env <<EOF
+        CLUSTER_NAME=greenstar
+        HELM_RELEASE_NAME=greenstar
+        DOMAIN=greenstar.test
+        EOF
+    status:
+      - grep "CLUSTER_NAME=greenstar" .env
+      - grep "HELM_RELEASE_NAME=greenstar" .env
+      - grep "DOMAIN=greenstar.test" .env
+
   setup-domain-dns: { deps: [ toolchain:setup-domain-dns ] }
 
   generate-certificates:
@@ -56,7 +69,7 @@ tasks:
     cmds:
       - |
         helm upgrade --install traefik traefik \
-          --repo "https://traefik.github.io/charts" --version="v${TRAEFIK_VERSION}" \
+          --repo "https://traefik.github.io/charts" --version="v30.1.0" \
           --create-namespace --namespace="ingress" \
           -f deploy/local/traefik-values.yaml \
           --wait
@@ -73,16 +86,16 @@ tasks:
       - kubectl diff --namespace=ingress -f ./deploy/local/ingress-gateway.yaml
 
   setup-observability:
-    deps: [ create-cluster ]
+    deps: [ setup-gateway ]
     cmds:
       - |
         helm upgrade --install metrics-server metrics-server \
-          --repo https://kubernetes-sigs.github.io/metrics-server --version="v${METRICS_SERVER_VERSION}" \
+          --repo https://kubernetes-sigs.github.io/metrics-server --version="v3.12.2" \
           --create-namespace --namespace=observability \
           --set 'args={"--kubelet-insecure-tls"}' \
           --wait
         helm upgrade --install kube-prometheus-stack kube-prometheus-stack \
-          --repo=https://prometheus-community.github.io/helm-charts --version="v${KUBE_PROMETHEUS_STACK_VERSION}" \
+          --repo=https://prometheus-community.github.io/helm-charts --version="v66.2.1" \
           --create-namespace --namespace=observability \
           --set cleanPrometheusOperatorObjectNames=true \
           -f deploy/local/kube-prometheus-stack-values.yaml \

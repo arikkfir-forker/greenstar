@@ -1,86 +1,92 @@
-import { createContext, useEffect, useState } from "react"
-import { CurrenciesByCountryCode } from "../util/currencies.ts"
-import { getLocation, LocationIQResponse } from "../services/location_iq.ts"
+import {createContext, useEffect, useState} from "react"
+import {CurrenciesByCountryCode} from "../util/currencies.ts"
+
+const url = "https://api.geoapify.com/v1/geocode/reverse"
+const apiKey = import.meta.env.VITE_GEOAPIFY_API_KEY
 
 export interface Locale {
     language: string
     currency: string
-    location?: LocationIQResponse
-    resolved: boolean
-    error?: Error
+    country: string
+    countryCode: string
 }
 
-function getDefaultLocale(): Locale {
-    try {
-        const storedLocale = localStorage.getItem("locale")
-        if (storedLocale) {
-            return Object.assign({ resolved: true }, JSON.parse(storedLocale))
-        } else {
-            return {
-                language: navigator.language,
-                currency: "USD",
-                resolved: false,
-            }
-        }
-    } catch (error) {
-        console.error("Failed to load location from local storage:", error)
-        return {
-            language: navigator.language,
-            currency: "USD",
-            resolved: false,
-            error: error instanceof Error ? error : new Error("Failed generating default locale: " + error),
-        }
-    }
-}
+export const LocaleContext = createContext<Locale | undefined>(undefined)
 
-// TODO: verify we're using context correctly here - there are two default values (one on the context and one in the provider)
+export function LocaleProvider({children}: { children: any }) {
+    const [locale, setLocale] = useState<Locale | undefined>()
 
-export const LocaleContext = createContext<Locale>({
-    language: navigator.language,
-    currency: "USD",
-    resolved: false,
-    error: new Error("Geolocation not initialized yet"),
-})
-
-export function LocaleProvider({ children }: { children: any }) {
-    const [locale, setLocale] = useState<Locale>(getDefaultLocale())
     useEffect(() => {
-        if (!navigator.geolocation) {
+        try {
+            const storedLocale = localStorage.getItem("locale")
+            if (storedLocale) {
+                const parsedLocation = JSON.parse(storedLocale);
+
+                // Ignore older versions of stored location
+                if (!parsedLocation.location && !parsedLocation.error && !parsedLocation.resolved) {
+                    setLocale(parsedLocation)
+                }
+                return
+            }
+        } catch (error) {
+            console.error("Failed to load location from local storage:", error)
+        }
+
+        if (!apiKey) {
+            console.warn("No GeoAPIfy API key provided. Using dummy locale.")
             setLocale({
-                language: navigator.language,
-                currency: "USD",
-                resolved: false,
-                error: new Error("Geolocation is not supported by your browser"),
-            })
+                          language:    navigator.language,
+                          currency:    "USD",
+                          country:     "United States",
+                          countryCode: "US",
+                      })
             return
         }
 
-        if (!locale.resolved) {
-            const getPositionPromise = new Promise<GeolocationPosition>((resolve, reject) =>
+        const getPositionPromise = new Promise<GeolocationPosition>(
+            (resolve, reject) =>
                 navigator.geolocation.getCurrentPosition(
                     (position) => resolve(position),
                     (error) => reject(new Error(error.message)),
-                    { timeout: 1000 * 60 * 5, maximumAge: 1000 * 60 * 60 * 4 },
+                    {
+                        timeout:    1000 * 60 * 5,
+                        maximumAge: 1000 * 60 * 60 * 4
+                    },
                 ),
+        )
+        getPositionPromise
+            .then((position) => {
+                const urlParams = new URLSearchParams()
+                urlParams.set("lat", position.coords.latitude + "")
+                urlParams.set("lon", position.coords.longitude + "")
+                urlParams.set("type", "country")
+                urlParams.set("limit", "1")
+                urlParams.set("format", "json")
+                urlParams.set("apiKey", apiKey)
+                return fetch(`${url}?${urlParams}`, {method: "GET"})
+            })
+            .then((resp) => {
+                if (!resp.ok) {
+                    throw new Error(`Unable to obtain your location: ${resp.statusText} (${resp.status})`)
+                } else {
+                    return resp.json()
+                }
+            })
+            .then((json) => json.results)
+            .then((results) => results[0])
+            .then((location): Locale => ({
+                      language:    navigator.language,
+                      currency:    CurrenciesByCountryCode[location.country_code.toUpperCase()] || "USD",
+                      country:     location.country,
+                      countryCode: location.country_code,
+                  }),
             )
-            getPositionPromise
-                .then((position) => getLocation(position))
-                .then(
-                    (location): Locale => ({
-                        language: navigator.language,
-                        location: location,
-                        currency: CurrenciesByCountryCode[location.address.country_code.toUpperCase()] || "USD",
-                        resolved: true,
-                        error: undefined,
-                    }),
-                )
-                .then((locale) => {
-                    localStorage.setItem("locale", JSON.stringify(locale))
-                    return locale
-                })
-                .then(setLocale)
-                .catch((e) => console.error("Failed to obtain your locale: ", e))
-        }
+            .then((locale) => {
+                localStorage.setItem("locale", JSON.stringify(locale))
+                return locale
+            })
+            .then(setLocale)
+            .catch((e) => console.error("Failed to obtain your locale: ", e))
     }, [locale, setLocale])
 
     return <LocaleContext.Provider value={locale}>{children}</LocaleContext.Provider>

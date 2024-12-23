@@ -46,11 +46,7 @@ deploy:
     hooks:
       before:
         - host:
-            command:
-              - yq
-              - -e
-              - .frontend.extraEnv.VITE_LOCATION_IQ_ACCESS_TOKEN = {"value":"{{.LOCATION_IQ_ACCESS_TOKEN}}"}
-              - ./hack/greenstar-values.yaml
+            command: [ touch, ./hack/greenstar-values.yaml ]
     releases:
       - name: '{{default (list "greenstar" (cmd "whoami") | join "-") .HELM_RELEASE_NAME}}'
         chartPath: ./deploy/chart

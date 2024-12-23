@@ -22,7 +22,7 @@ COPY vite.config.ts ./
 ENTRYPOINT ["npm","run","dev"]
 
 FROM development AS builder
-ARG VITE_LOCATION_IQ_ACCESS_TOKEN
+ARG VITE_GEOAPIFY_API_KEY
 ENV NODE_ENV=production
 RUN npm run build
 

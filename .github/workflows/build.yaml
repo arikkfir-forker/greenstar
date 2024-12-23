@@ -98,7 +98,6 @@ jobs:
           export-env: true
         env:
           APPLY_PATCHES_SH: "op://GreenSTAR/mtg3xwmgngg5jzt6oft53btkci/frontend/apply-patches.sh"
-          LOCATION_IQ_ACCESS_TOKEN: "op://GreenSTAR/Location IQ/credential"
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_GREENSTAR }}
 
       - if: matrix.images.name == 'frontend'
@@ -129,7 +128,6 @@ jobs:
           context: ${{ matrix.images.dir }}
           file: ${{ matrix.images.file }}
           build-args: |
-            VITE_LOCATION_IQ_ACCESS_TOKEN=${{ env.LOCATION_IQ_ACCESS_TOKEN }}
             VERSION=v0.0.0+${{ github.sha }}
           target: production
           push: true
@@ -234,10 +232,6 @@ jobs:
         id: setup-cluster
         run: task -v setup-cluster
 
-      - name: Generate Helm values file
-        run: |
-          task -v generate-helm-values
-
       - name: Authenticate to GHCR
         uses: docker/login-action@v3
         with:
@@ -253,8 +247,7 @@ jobs:
             oci://ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ github.event.repository.name }} \
             --version "${HELM_PACKAGE_VERSION}" \
             --create-namespace --namespace="greenstar" \
-            --values deploy/local/chart-ci-values.yaml \
-            --values hack/greenstar-values.yaml
+            --values deploy/local/chart-ci-values.yaml
 
       - name: Sanity
         run: curl -i https://acme.app.greenstar.test/
