@@ -10,17 +10,20 @@ backend:
     extraEnv:
       OTEL_SDK_DISABLED:
         value: "true"
+      OTEL_LOG_LEVEL:
+        value: info
   migrate:
     extraEnv:
       OTEL_SDK_DISABLED:
         value: "true"
-    volumeMounts:
-      - name: rates
-        mountPath: /var/greenstar/rates
+      OTEL_LOG_LEVEL:
+        value: info
   server:
     extraEnv:
       OTEL_SDK_DISABLED:
         value: "true"
+      OTEL_LOG_LEVEL:
+        value: info
     ingress:
       enabled: true
       parentRef:
@@ -29,11 +32,6 @@ backend:
         namespace: ingress
         httpSectionName: web
         httpsSectionName: websecure
-  volumes:
-    - name: rates
-      hostPath:
-        path: /var/greenstar/rates
-        type: Directory
 
 frontend:
   ingress:
@@ -59,3 +57,11 @@ postgres:
       name: local
       namespace: ingress
       tlsSectionName: postgres
+  volumeMounts:
+    - name: rates
+      mountPath: /var/greenstar/rates
+  volumes:
+    - name: rates
+      hostPath:
+        path: /var/greenstar/rates
+        type: Directory

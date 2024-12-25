@@ -90,9 +90,6 @@ backend:
 
 frontend:
   extraArgs: [ "--", "--logLevel=info", "--port=3000", "--host=0.0.0.0" ]
-  extraEnv:
-    VITE_SLOW_REQUESTS:
-      value: "F"
   ingress:
     enabled: true
     parentRef:
