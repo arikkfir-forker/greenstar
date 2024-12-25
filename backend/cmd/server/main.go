@@ -167,7 +167,7 @@ func execute() (re error) {
 	stop := make(chan string, 100)
 	errs := make(chan error, 100)
 	startHTTPServer := func(ctx context.Context, stopChan chan string, errChan chan error, name string, server *http.Server) {
-		slog.DebugContext(ctx, "Starting HTTP server", "server", name)
+		slog.DebugContext(ctx, "Starting HTTP server", "server", name, "addr", server.Addr)
 		if err := server.ListenAndServe(); lang.IgnoreErrorOfType(err, http.ErrServerClosed) != nil {
 			errChan <- fmt.Errorf("%s server failed: %w", name, err)
 			stopChan <- name

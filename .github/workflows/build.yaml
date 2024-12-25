@@ -242,7 +242,8 @@ jobs:
             oci://ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ github.event.repository.name }} \
             --version "${HELM_PACKAGE_VERSION}" \
             --create-namespace --namespace="greenstar" \
-            --values deploy/local/chart-ci-values.yaml
+            --values deploy/local/chart-ci-values.yaml \
+            --wait
 
       - name: Run tests
         id: test
