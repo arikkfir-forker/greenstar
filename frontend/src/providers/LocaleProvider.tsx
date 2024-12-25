@@ -12,7 +12,7 @@ export interface Locale {
 }
 
 const dummyLocale = {
-    language: navigator.language,
+    language: "en",
     currency: "USD",
     country: "United States",
     countryCode: "US",

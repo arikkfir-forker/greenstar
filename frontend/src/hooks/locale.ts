@@ -11,7 +11,7 @@ export function useCurrencyFormatter() {
             currency: currency,
             maximumFractionDigits: 0,
         })
-    }, [locale, navigator.language])
+    }, [locale])
     return useCallback((v: number) => currencyFormat.format(v), [currencyFormat])
 }
 
@@ -21,6 +21,6 @@ export function useDateFormatter(style?: "full" | "long" | "medium" | "short") {
         const language = locale.language
         const dateStyle = style || "short"
         return new Intl.DateTimeFormat(language, { dateStyle })
-    }, [locale, style, navigator.language])
+    }, [locale, style])
     return useCallback((v: Date | number) => dateTimeFormat.format(v), [dateTimeFormat])
 }
