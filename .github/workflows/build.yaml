@@ -13,6 +13,8 @@ defaults:
   run:
     shell: bash -exuo pipefail {0}
 
+# TODO: generate workflow summary or comment on the source PR (or both)
+
 jobs:
 
   backend-unit-tests:
@@ -183,11 +185,8 @@ jobs:
     name: End-to-End Tests
     runs-on: ubuntu-22.04
     needs: [ build-helm-package ]
-    env:
-      CLUSTER_NAME: greenstar-ci-${{ github.run_id }}-${{ github.run_attempt }}
     permissions:
       id-token: write
-      packages: read
     steps:
 
       - name: Checkout
@@ -251,28 +250,64 @@ jobs:
         working-directory: e2e
 
       - name: Export cluster state
+        id: export-cluster-state
         if: success() || steps.setup-cluster.outcome == 'failure' || steps.setup-cluster.outcome == 'success'
         run: |
           kubectl cluster-info dump --namespaces=ingress,observability,greenstar --output-directory=./cluster-state
 
-      - name: Upload cluster dump
-        uses: google-github-actions/upload-cloud-storage@v2
-        if: success() || steps.cluster-info.outcome == 'success'
+      - name: Upload cluster state artifact
+        uses: actions/upload-artifact@v4
+        if: success() || steps.export-cluster-state.outcome == 'success'
         with:
-          process_gcloudignore: 'false'
+          name: cluster-state
           path: ./cluster-state
-          destination: arikkfir-static-website/github/${{ github.repository }}/${{ github.event_name == 'push' && 'commit' || 'pr' }}/${{ github.event_name == 'push' && github.sha || github.ref_name }}/
+          include-hidden-files: true
 
       - name: Teardown
         run: task teardown
         if: success() || steps.setup-cluster.outcome == 'success' || steps.setup-cluster.outcome == 'failure'
 
-      - name: Upload commit test results
-        uses: google-github-actions/upload-cloud-storage@v2
+      - name: Upload test results artifact
+        uses: actions/upload-artifact@v4
         if: success() || steps.test.outcome == 'success' || steps.test.outcome == 'failure'
         with:
-          process_gcloudignore: 'false'
+          name: e2e-test-results
           path: ./e2e/monocart-report/
-          destination: arikkfir-static-website/github/${{ github.repository }}/${{ github.event_name == 'push' && 'commit' || 'pr' }}/${{ github.event_name == 'push' && github.sha || github.ref_name }}/e2e/
+          include-hidden-files: true
 
-# TODO: move PR/commit comments updates to here
+  upload-results:
+    name: Upload Results
+    runs-on: ubuntu-22.04
+    if: success() || needs.run-e2e-tests.result == 'success' || needs.run-e2e-tests.result == 'failure'
+    needs: [ run-e2e-tests ]
+    permissions:
+      id-token: write
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download cluster state artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cluster-state
+          path: ./staging/cluster-state
+
+      - name: Download test results artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-test-results
+          path: ./staging/e2e-report
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions/providers/github-oidc
+
+      - name: Upload artifacts
+        uses: google-github-actions/upload-cloud-storage@v2
+        with:
+          process_gcloudignore: 'false'
+          path: ./staging
+          destination: arikkfir-static-website/github/${{ github.repository }}/${{ github.run_id }}-${{ github.run_attempt }}/
