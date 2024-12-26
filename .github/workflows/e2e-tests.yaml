@@ -93,7 +93,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: helm-package.tgz
-          path: greenstar-${VERSION}.tgz
+          path: greenstar-${{ env.VERSION }}.tgz
 
   run-e2e-tests:
     name: End-to-End Tests
