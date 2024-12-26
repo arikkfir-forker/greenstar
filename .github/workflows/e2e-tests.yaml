@@ -1,4 +1,4 @@
-name: Build
+name: End to End Tests
 
 on:
   pull_request:
@@ -14,7 +14,7 @@ defaults:
 
 jobs:
 
-  docker:
+  build-images:
     name: Build ${{ matrix.images.name }} image
     runs-on: ubuntu-22.04
     strategy:
@@ -25,8 +25,6 @@ jobs:
           - { dir: backend, file: backend/Dockerfile.server, name: backend-server, imageName: backend-server, target: production }
           - { dir: frontend, file: frontend/Dockerfile, name: frontend, imageName: frontend, target: production }
       fail-fast: false
-    permissions:
-      packages: write
     steps:
 
       - name: Checkout
@@ -43,17 +41,6 @@ jobs:
         with:
           install: true
 
-      - uses: docker/login-action@v3
-        name: Login to GitHub Container Registry
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-#      - run: echo "DOCKER_BUILD_CHECKS_ANNOTATIONS=false" >> $GITHUB_ENV
-#      - run: echo "DOCKER_BUILD_RECORD_UPLOAD=false" >> $GITHUB_ENV
-#      - run: echo "DOCKER_BUILD_SUMMARY=false" >> $GITHUB_ENV
-
       - uses: docker/build-push-action@v6
         name: Build image
         with:
@@ -65,17 +52,24 @@ jobs:
           build-args: |
             VERSION=v0.0.0+${{ github.sha }}
           target: production
-          push: true
+          push: false
           tags: ghcr.io/${{ github.repository }}/${{ matrix.images.imageName }}:${{ github.sha }}
+          outputs: type=docker,dest=/tmp/${{ matrix.images.name }}.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.images.name }}-image.tar
+          path: /tmp/${{ matrix.images.name }}.tar
 
   build-helm-package:
     name: Build Helm chart
     runs-on: ubuntu-22.04
     outputs:
       version: ${{ steps.package.outputs.version }}
-    permissions:
-      contents: read
-      packages: write
+    env:
+      IMAGES_TAG: ${{ github.sha }}
+      VERSION: "0.0.0+${{ github.sha }}"
     steps:
 
       - name: Checkout
@@ -92,32 +86,19 @@ jobs:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Authenticate to GHCR
-        uses: docker/login-action@v3
+      - name: Package Helm chart
+        run: task -v package-helm-chart
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Package
-        id: package
-        env:
-          IMAGES_TAG: ${{ github.sha }}
-          VERSION: "0.0.0+${{ github.sha }}"
-        run: |
-          task -v package-helm-chart
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-
-      - name: Push
-        run: |
-          helm push *.tgz oci://ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+          name: helm-package.tgz
+          path: greenstar-${VERSION}.tgz
 
   run-e2e-tests:
     name: End-to-End Tests
     runs-on: ubuntu-22.04
-    needs: [ build-helm-package ]
-    permissions:
-      id-token: write
+    needs: [ build-images, build-helm-package ]
     steps:
 
       - name: Checkout
@@ -154,23 +135,16 @@ jobs:
         id: setup-cluster
         run: task -v setup-cluster
 
-      - name: Authenticate to GHCR
-        uses: docker/login-action@v3
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          pattern: '*.tar'
+
+      - name: Load container images
+        run: for f in *-image.tar; do kind load image-archive ${f}; done
 
       - name: Install Helm package
-        env:
-          HELM_PACKAGE_VERSION: ${{ needs.build-helm-package.outputs.version }}
-        run: |
-          helm install greenstar \
-            oci://ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ github.event.repository.name }} \
-            --version "${HELM_PACKAGE_VERSION}" \
-            --create-namespace --namespace="greenstar" \
-            --values deploy/local/chart-ci-values.yaml \
-            --wait
+        run: helm install greenstar helm-package.tgz --create-namespace -n greenstar -f deploy/local/chart-ci-values.yaml --wait --wait-for-jobs
 
       - name: Run tests
         id: test
@@ -181,10 +155,10 @@ jobs:
         id: export-cluster-state
         if: success() || steps.setup-cluster.outcome == 'failure' || steps.setup-cluster.outcome == 'success'
         run: |
-          kubectl cluster-info dump --output=yaml --output-directory=./cluster-state --namespaces=ingress,observability,greenstar
-          kubectl get gateways.gateway.networking.k8s.io --output=yaml --all-namespaces > ./cluster-state/gateways.yaml
-          kubectl get httproutes.gateway.networking.k8s.io --output=yaml --all-namespaces > ./cluster-state/httproutes.yaml
-          kubectl get tlsroutes.gateway.networking.k8s.io --output=yaml --all-namespaces > ./cluster-state/tlsroutes.yaml
+          kubectl cluster-info dump -o yaml --output-directory=./cluster-state --namespaces=ingress,observability,greenstar
+          kubectl get gateways.gateway.networking.k8s.io -o yaml -A > ./cluster-state/gateways.yaml
+          kubectl get httproutes.gateway.networking.k8s.io -o yaml -A > ./cluster-state/httproutes.yaml
+          kubectl get tlsroutes.gateway.networking.k8s.io -o yaml -A > ./cluster-state/tlsroutes.yaml
 
       - name: Upload cluster state artifact
         uses: actions/upload-artifact@v4
@@ -205,40 +179,3 @@ jobs:
           name: e2e-test-results
           path: ./e2e/monocart-report/
           include-hidden-files: true
-
-  upload-e2e-results:
-    name: Upload E2E Results
-    runs-on: ubuntu-22.04
-    if: success() || needs.run-e2e-tests.result == 'success' || needs.run-e2e-tests.result == 'failure'
-    needs: [ run-e2e-tests ]
-    permissions:
-      id-token: write
-    steps:
-
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Setup Google Cloud SDK
-        uses: google-github-actions/auth@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions/providers/github-oidc
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: e2e-test-results
-          path: ./staging/e2e-report
-
-      - name: Upload artifact
-        uses: google-github-actions/upload-cloud-storage@v2
-        with:
-          process_gcloudignore: 'false'
-          path: ./staging/e2e-report
-          destination: arikkfir-static-website/github/greenstar/${{ github.run_id }}-${{ github.run_attempt }}/
-
-      - name: Add job summary
-        run: |
-          echo "End-to-end test results can be accessed here: https://static.kfirs.com/github/greenstar/${{ github.run_id }}-${{ github.run_attempt }}/e2e-report/" >> $GITHUB_STEP_SUMMARY
