@@ -50,9 +50,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: echo "DOCKER_BUILD_CHECKS_ANNOTATIONS=false" >> $GITHUB_ENV
-      - run: echo "DOCKER_BUILD_RECORD_UPLOAD=false" >> $GITHUB_ENV
-      - run: echo "DOCKER_BUILD_SUMMARY=false" >> $GITHUB_ENV
+#      - run: echo "DOCKER_BUILD_CHECKS_ANNOTATIONS=false" >> $GITHUB_ENV
+#      - run: echo "DOCKER_BUILD_RECORD_UPLOAD=false" >> $GITHUB_ENV
+#      - run: echo "DOCKER_BUILD_SUMMARY=false" >> $GITHUB_ENV
 
       - uses: docker/build-push-action@v6
         name: Build image
