@@ -10,8 +10,6 @@ defaults:
   run:
     shell: bash -exuo pipefail {0}
 
-# TODO: generate workflow summary or comment on the source PR (or both)
-
 jobs:
 
   build-images:
@@ -118,8 +116,6 @@ jobs:
         with:
           name: helm-package
           path: .
-
-      - run: ls -la
 
       - name: Setup Task
         uses: arduino/setup-task@v2
