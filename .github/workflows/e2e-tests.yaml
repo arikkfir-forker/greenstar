@@ -92,7 +92,7 @@ jobs:
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: helm-package.tgz
+          name: helm-package
           path: greenstar-${{ env.VERSION }}.tgz
 
   run-e2e-tests:
@@ -106,12 +106,18 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Download artifacts
+      - name: Download image artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: '*-image'
           merge-multiple: true
           path: images
+
+      - name: Download Helm package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: helm-package
+          path: .
 
       - name: Setup Task
         uses: arduino/setup-task@v2
@@ -146,7 +152,7 @@ jobs:
         run: for f in images/*.tar; do kind load image-archive --name greenstar ${f}; done
 
       - name: Install Helm package
-        run: helm install greenstar helm-package.tgz --create-namespace -n greenstar -f deploy/local/chart-ci-values.yaml --wait --wait-for-jobs
+        run: helm install greenstar ./helm-package.tgz --create-namespace -n greenstar -f deploy/local/chart-ci-values.yaml --wait --wait-for-jobs
 
       - name: Run tests
         id: test
