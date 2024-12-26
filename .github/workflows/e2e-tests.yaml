@@ -106,6 +106,16 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*.tar'
+      - run: ls -la
+      - run: unzip backend-acme-image.tar
+        continue-on-error: true
+      - run: tar xf backend-acme-image.tar
+        continue-on-error: true
+
       - name: Setup Task
         uses: arduino/setup-task@v2
         with:
@@ -134,13 +144,6 @@ jobs:
       - name: Setup Cluster
         id: setup-cluster
         run: task -v setup-cluster
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: '*.tar'
-      - run: ls -la
-      - run: unzip backend-acme-image.tar
 
       - name: Load container images
         run: for f in *-image.tar; do kind load image-archive --name greenstar ${f}; done
