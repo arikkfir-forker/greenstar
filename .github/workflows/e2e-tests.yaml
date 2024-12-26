@@ -113,9 +113,6 @@ jobs:
           merge-multiple: true
           path: images
 
-      - run: ls -la
-      - run: ls -la images/
-
       - name: Setup Task
         uses: arduino/setup-task@v2
         with:
@@ -146,7 +143,7 @@ jobs:
         run: task -v setup-cluster
 
       - name: Load container images
-        run: for f in *-image.tar; do kind load image-archive --name greenstar ${f}; done
+        run: for f in images/*.tar; do kind load image-archive --name greenstar ${f}; done
 
       - name: Install Helm package
         run: helm install greenstar helm-package.tgz --create-namespace -n greenstar -f deploy/local/chart-ci-values.yaml --wait --wait-for-jobs
