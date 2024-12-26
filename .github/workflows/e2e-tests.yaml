@@ -154,7 +154,7 @@ jobs:
         run: for f in images/*.tar; do kind load image-archive --name greenstar ${f}; done
 
       - name: Install Helm package
-        run: helm install greenstar ./helm-package.tgz --create-namespace -n greenstar -f deploy/local/chart-ci-values.yaml --wait --wait-for-jobs
+        run: helm install greenstar ./greenstar-0.0.0+*.tgz --create-namespace -n greenstar -f deploy/local/chart-ci-values.yaml --wait --wait-for-jobs
 
       - name: Run tests
         id: test
