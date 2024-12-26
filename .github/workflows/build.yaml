@@ -252,15 +252,15 @@ jobs:
         with:
           process_gcloudignore: 'false'
           path: ./staging/cluster-state
-          destination: arikkfir-static-website/github/${{ github.repository }}/${{ github.run_id }}-${{ github.run_attempt }}/
+          destination: arikkfir-static-website/github/greenstar/${{ github.run_id }}-${{ github.run_attempt }}/
 
       - name: Add job summary
         run: |
           echo "Cluster state after running end-to-end test suite was captured and can be accessed by:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "```shell" >> $GITHUB_STEP_SUMMARY
-          echo "$ gcloud storage cp -r gs://arikkfir-static-website/github/arikkfir/greenstar/${{ github.run_id }}-${{ github.run_attempt }}/cluster-state ." >> $GITHUB_STEP_SUMMARY
-          echo "```" >> $GITHUB_STEP_SUMMARY
+          echo '```shell' >> $GITHUB_STEP_SUMMARY
+          echo "$ gcloud storage cp -r gs://arikkfir-static-website/github/greenstar/${{ github.run_id }}-${{ github.run_attempt }}/cluster-state ." >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
   upload-e2e-results:
     name: Upload E2E Results
@@ -293,8 +293,8 @@ jobs:
         with:
           process_gcloudignore: 'false'
           path: ./staging/e2e-report
-          destination: arikkfir-static-website/github/${{ github.repository }}/${{ github.run_id }}-${{ github.run_attempt }}/
+          destination: arikkfir-static-website/github/greenstar/${{ github.run_id }}-${{ github.run_attempt }}/
 
       - name: Add job summary
         run: |
-          echo "End-to-end test results can be accessed here: https://static.kfirs.com/github/arikkfir/greenstar/${{ github.run_id }}-${{ github.run_attempt }}/e2e-report/" >> $GITHUB_STEP_SUMMARY
+          echo "End-to-end test results can be accessed here: https://static.kfirs.com/github/greenstar/${{ github.run_id }}-${{ github.run_attempt }}/e2e-report/" >> $GITHUB_STEP_SUMMARY
