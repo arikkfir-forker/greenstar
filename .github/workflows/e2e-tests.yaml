@@ -140,7 +140,7 @@ jobs:
         with:
           pattern: '*.tar'
       - run: ls -la
-      - run: unzip backend-acme.tar
+      - run: unzip backend-acme-image.tar
 
       - name: Load container images
         run: for f in *-image.tar; do kind load image-archive --name greenstar ${f}; done
