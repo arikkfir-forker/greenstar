@@ -141,7 +141,7 @@ jobs:
           pattern: '*.tar'
 
       - name: Load container images
-π        run: for f in *-image.tar; do kind load image-archive --name kind-greenstar ${f}; done
+        run: for f in *-image.tar; do kind load image-archive --name kind-greenstar ${f}; done
 
       - name: Install Helm package
         run: helm install greenstar helm-package.tgz --create-namespace -n greenstar -f deploy/local/chart-ci-values.yaml --wait --wait-for-jobs
