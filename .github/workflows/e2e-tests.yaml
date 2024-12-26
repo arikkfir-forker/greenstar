@@ -119,6 +119,8 @@ jobs:
           name: helm-package
           path: .
 
+      - run: ls -la
+
       - name: Setup Task
         uses: arduino/setup-task@v2
         with:
