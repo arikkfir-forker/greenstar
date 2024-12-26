@@ -40,6 +40,10 @@ jobs:
 #          APPLY_PATCHES_SH: "op://GreenSTAR/mtg3xwmgngg5jzt6oft53btkci/frontend/apply-patches.sh"
 #          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_GREENSTAR }}
 
+      - if: matrix.images.name == 'frontend'
+        name: Apply patches
+        run: touch frontend/apply-patches.sh
+
 #      - if: matrix.images.name == 'frontend'
 #        name: Apply patches
 #        run: |-
@@ -129,12 +133,6 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Google Cloud SDK
-        uses: google-github-actions/auth@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions/providers/github-oidc
 
       - name: Setup Task
         uses: arduino/setup-task@v2
