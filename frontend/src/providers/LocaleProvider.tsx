@@ -87,7 +87,7 @@ export function LocaleProvider({ children }: { children: any }) {
             })
             .then(setLocale)
             .catch((e) => console.error("Failed to obtain your locale: ", e))
-    }, [locale, setLocale])
+    }, [setLocale])
 
     return <LocaleContext.Provider value={locale}>{children}</LocaleContext.Provider>
 }
