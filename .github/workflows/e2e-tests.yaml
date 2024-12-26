@@ -110,15 +110,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: '*-image'
+          merge-multiple: true
+          path: images
 
-      - run: ls -la backend-acme-image/
-        continue-on-error: true
-      - run: ls -la backend-migrate-image/
-        continue-on-error: true
-      - run: ls -la backend-server-image/
-        continue-on-error: true
-      - run: ls -la frontend-image/
-        continue-on-error: true
+      - run: ls -la
+      - run: ls -la images/
 
       - name: Setup Task
         uses: arduino/setup-task@v2
