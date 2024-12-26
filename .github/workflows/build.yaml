@@ -31,6 +31,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
 #      - name: Fetch secrets
 #        uses: 1password/load-secrets-action@v2
@@ -93,6 +95,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Helm
         uses: azure/setup-helm@v4.2.0
@@ -133,6 +137,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Task
         uses: arduino/setup-task@v2
@@ -215,8 +221,8 @@ jobs:
           path: ./e2e/monocart-report/
           include-hidden-files: true
 
-  upload-results:
-    name: Upload Results
+  upload-cluster-state-results:
+    name: Upload cluster state Results
     runs-on: ubuntu-22.04
     if: success() || needs.run-e2e-tests.result == 'success' || needs.run-e2e-tests.result == 'failure'
     needs: [ run-e2e-tests ]
@@ -226,18 +232,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Download cluster state artifact
-        uses: actions/download-artifact@v4
         with:
-          name: cluster-state
-          path: ./staging/cluster-state
-
-      - name: Download test results artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: e2e-test-results
-          path: ./staging/e2e-report
+          persist-credentials: false
 
       - name: Setup Google Cloud SDK
         uses: google-github-actions/auth@v2
@@ -245,16 +241,60 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions/providers/github-oidc
 
-      - name: Upload artifacts
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cluster-state
+          path: ./staging/cluster-state
+
+      - name: Upload artifact
         uses: google-github-actions/upload-cloud-storage@v2
         with:
           process_gcloudignore: 'false'
           path: ./staging/cluster-state
           destination: arikkfir-static-website/github/${{ github.repository }}/${{ github.run_id }}-${{ github.run_attempt }}/
 
-      - name: Upload artifacts
+      - name: Add job summary
+        run: |
+          echo "Cluster state after running end-to-end test suite was captured and can be accessed by:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "```shell" >> $GITHUB_STEP_SUMMARY
+          echo "$ gcloud storage cp -r gs://arikkfir-static-website/github/arikkfir/greenstar/${{ github.run_id }}-${{ github.run_attempt }}/cluster-state ." >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+
+  upload-e2e-results:
+    name: Upload E2E Results
+    runs-on: ubuntu-22.04
+    if: success() || needs.run-e2e-tests.result == 'success' || needs.run-e2e-tests.result == 'failure'
+    needs: [ run-e2e-tests ]
+    permissions:
+      id-token: write
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-actions/providers/github-oidc
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-test-results
+          path: ./staging/e2e-report
+
+      - name: Upload artifact
         uses: google-github-actions/upload-cloud-storage@v2
         with:
           process_gcloudignore: 'false'
           path: ./staging/e2e-report
           destination: arikkfir-static-website/github/${{ github.repository }}/${{ github.run_id }}-${{ github.run_attempt }}/
+
+      - name: Add job summary
+        run: |
+          echo "End-to-end test results can be accessed here: https://static.kfirs.com/github/arikkfir/greenstar/${{ github.run_id }}-${{ github.run_attempt }}/e2e-report/" >> $GITHUB_STEP_SUMMARY
