@@ -59,7 +59,7 @@ jobs:
       - name: Upload image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.images.name }}-image.tar
+          name: ${{ matrix.images.name }}-image
           path: /tmp/${{ matrix.images.name }}.tar
 
   build-helm-package:
@@ -109,11 +109,15 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: '*.tar'
-      - run: ls -la
-      - run: unzip backend-acme-image.tar
+          pattern: '*-image'
+
+      - run: ls -la backend-acme-image/
         continue-on-error: true
-      - run: tar xf backend-acme-image.tar
+      - run: ls -la backend-migrate-image/
+        continue-on-error: true
+      - run: ls -la backend-server-image/
+        continue-on-error: true
+      - run: ls -la frontend-image/
         continue-on-error: true
 
       - name: Setup Task
