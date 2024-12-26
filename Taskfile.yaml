@@ -185,6 +185,8 @@ tasks:
   dev:
     deps: [ generate-rest, setup-cluster ]
     cmds:
+      - touch ./hack/greenstar-values.yaml
+      - yq -i '.frontend.extraEnv.VITE_GEOAPIFY_API_KEY.value = env(GEOAPIFY_API_KEY)' ./hack/greenstar-values.yaml
       - skaffold dev --tail=false --toot=true
 
   teardown:

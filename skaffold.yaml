@@ -43,10 +43,6 @@ build:
     concurrency: 1
 deploy:
   helm:
-    hooks:
-      before:
-        - host:
-            command: [ touch, ./hack/greenstar-values.yaml ]
     releases:
       - name: greenstar
         chartPath: ./deploy/chart

@@ -10,6 +10,7 @@ RUN jq ".version=\"${VERSION}\"" package.json > /tmp/package.json && mv /tmp/pac
 
 FROM node:23.3.0-alpine AS development
 WORKDIR /app
+ARG VITE_GEOAPIFY_API_KEY
 ENV NODE_ENV=development
 COPY --from=dependencies /app ./
 COPY eslint.config.js ./
